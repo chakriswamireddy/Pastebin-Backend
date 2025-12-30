@@ -9,7 +9,8 @@ module.exports = {
 
     dialect:'postgresql',
     dbCredentials: {
-      connectionString: "postgresql://postgres:DTGgnXqjLhJDoaiyaurpjvJvvtdculuS@yamabiko.proxy.rlwy.net:20259/railway",
+      connectionString: process.env.DATABASE_URL,
     },
+  url: process.env.DATABASE_URL
   };
   
