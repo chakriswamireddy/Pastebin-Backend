@@ -20,4 +20,4 @@ const tempBins = pgTable("temp_bins", {
     .notNull(),
 });
 
-module.exports = tempBins;
+module.exports = {tempBins};

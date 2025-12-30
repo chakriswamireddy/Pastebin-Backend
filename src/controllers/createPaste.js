@@ -1,11 +1,23 @@
-const { db } = require("../config/db");
+ 
 const { and, or, isNull, gt, gte, eq, sql } = require("drizzle-orm");
 const { tempBins } = require("../models/binSchema");
 const { isNotNull } = require("drizzle-orm");
+const db = require("../config/db");
 
 const createPaste = async (req, res) => {
   try {
-    const { content, ttl_seconds, max_views } = req.body;
+    let { content, ttl_seconds, max_views } = req.body;
+
+    ttl_seconds =
+    ttl_seconds !== undefined && ttl_seconds !== null && ttl_seconds !== ""
+      ? Number(ttl_seconds)
+      : null;
+
+  max_views =
+    max_views !== undefined && max_views !== null && max_views !== ""
+      ? Number(max_views)
+      : null;
+      
 
     if (ttl_seconds && ttl_seconds < 1) {
       return res.status(422).json({
@@ -25,11 +37,18 @@ const createPaste = async (req, res) => {
       });
     }
 
-    const newBin = await db.insert(tempBins).values({
+    const [newBin] = await db
+    .insert(tempBins)
+    .values({
       content,
-      viewsRemaining: max_views || null,
-      expiresAt: ttl_seconds ? new Date(Date.now() + ttl_seconds * 1000) : null,
-    });
+      viewsRemaining: max_views ?? null,
+      expiresAt:
+        ttl_seconds != null
+          ? new Date(Date.now() + ttl_seconds * 1000)
+          : null,
+    })
+    .returning();
+  
 
     return res.status(200).json({
       id: newBin.id,
