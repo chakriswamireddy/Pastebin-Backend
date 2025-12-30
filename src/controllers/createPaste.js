@@ -1,8 +1,7 @@
 const { db } = require("../config/db");
-const { and, or, isNull, gt, gte, eq, sql }  = require('drizzle-orm');
+const { and, or, isNull, gt, gte, eq, sql } = require("drizzle-orm");
 const { tempBins } = require("../models/binSchema");
 const { isNotNull } = require("drizzle-orm");
- 
 
 const createPaste = async (req, res) => {
   try {
@@ -33,51 +32,44 @@ const createPaste = async (req, res) => {
     });
 
     return res.status(200).json({
-        id: newBin.id,
-        url: `${process.env.FRONTEND_URL}/p/${newBin.id}`
-    })
-
-
+      id: newBin.id,
+      url: `${process.env.FRONTEND_URL}/p/${newBin.id}`,
+    });
   } catch (error) {
+    console.log("error : ", error);
     return res.status(500).json({ error: "Internal Server Error" });
   }
 };
 
+const getPaste = async (req, res) => {
+  try {
+    const { id: resourceId } = req.params;
 
-const getPaste = async (req,res) => {
-
-    const {id : resourceId} = req.params;
-    
     const result = await db
       .update(tempBins)
       .set({
         viewsRemaining: sql`
-          CASE
-            WHEN ${tempBins.viewsRemaining} IS NULL
-              THEN NULL
-            ELSE ${tempBins.viewsRemaining} - 1
-          END
-        `,
+              CASE
+                WHEN ${tempBins.viewsRemaining} IS NULL
+                  THEN NULL
+                ELSE ${tempBins.viewsRemaining} - 1
+              END
+            `,
       })
       .where(
         and(
           eq(tempBins.id, resourceId),
-    
-          or(
-            isNull(tempBins.expiresAt),
-            gte(tempBins.expiresAt, new Date())
-          ),
-    
-          or(
-            isNull(tempBins.viewsRemaining),
-            gt(tempBins.viewsRemaining, 0)
-          )
+
+          or(isNull(tempBins.expiresAt), gte(tempBins.expiresAt, new Date())),
+
+          or(isNull(tempBins.viewsRemaining), gt(tempBins.viewsRemaining, 0))
         )
       )
       .returning();
 
-
-      await db.delete(tempBins).where(
+    await db
+      .delete(tempBins)
+      .where(
         and(
           eq(tempBins.id, resourceId),
           or(
@@ -85,17 +77,14 @@ const getPaste = async (req,res) => {
               isNotNull(tempBins.viewsRemaining),
               lte(tempBins.viewsRemaining, 0)
             ),
-            and(
-              isNotNull(tempBins.expiresAt),
-              lt(tempBins.expiresAt, now)
-            )
+            and(isNotNull(tempBins.expiresAt), lt(tempBins.expiresAt, now))
           )
         )
       );
-      
-      
-}
-
-
+  } catch (error) {
+    console.log("error : ", error);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+};
 
 module.exports = { createPaste, getPaste };
