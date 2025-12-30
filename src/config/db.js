@@ -1,6 +1,7 @@
-import { drizzle } from "drizzle-orm/node-postgres";
-import { Pool } from "pg";
-import * as schema from "../models/binSchema.js";
+const { drizzle } = require( "drizzle-orm/node-postgres")
+const { Pool } = require( "pg");
+const schema = require("../models/binSchema.js");
+
 
 if (!process.env.DATABASE_URL) {
   console.log("DATABASE_URL is not set");
@@ -13,4 +14,6 @@ const pool = new Pool({
     : false,
 });
 
-export const db = drizzle(pool, { schema });
+const db = drizzle(pool, { schema });
+
+module.exports  = db;
