@@ -96,7 +96,7 @@ const getPaste = async (req, res) => {
               isNotNull(tempBins.viewsRemaining),
               lte(tempBins.viewsRemaining, 0)
             ),
-            and(isNotNull(tempBins.expiresAt), lt(tempBins.expiresAt, now))
+            and(isNotNull(tempBins.expiresAt), lt(tempBins.expiresAt, new Date()))
           )
         )
       );
