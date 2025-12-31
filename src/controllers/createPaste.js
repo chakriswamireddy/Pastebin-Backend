@@ -95,7 +95,7 @@ const getPaste = async (req, res) => {
  
     if (
       (row.viewsRemaining !== null && row.viewsRemaining <= 0) ||
-      (row.expiresAt !== null && row.expiresAt < now)
+      (row.expiresAt !== null && row.expiresAt < new Date())
     ) {
       await db.delete(tempBins).where(eq(tempBins.id, resourceId));
     }
