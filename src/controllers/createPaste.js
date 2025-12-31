@@ -7,6 +7,13 @@ const createPaste = async (req, res) => {
   try {
     let { content, ttl_seconds, max_views } = req.body;
 
+    const isTestMode = process.env.TEST_MODE === "1";
+
+    const now =
+      isTestMode && req.headers["x-test-now-ms"]
+        ? new Date(Number(req.headers["x-test-now-ms"]))
+        : new Date();
+
     ttl_seconds =
       ttl_seconds !== undefined && ttl_seconds !== null && ttl_seconds !== ""
         ? Number(ttl_seconds)
@@ -42,7 +49,7 @@ const createPaste = async (req, res) => {
         viewsRemaining: max_views ?? null,
         expiresAt:
           ttl_seconds != null
-            ? new Date(Date.now() + ttl_seconds * 1000)
+            ? new Date(now.getTime() + ttl_seconds * 1000)
             : null,
       })
       .returning();
@@ -61,6 +68,13 @@ const getPaste = async (req, res) => {
   try {
     const { id: resourceId } = req.params;
 
+    const isTestMode = process.env.TEST_MODE === "1";
+
+    const now =
+      isTestMode && req.headers["x-test-now-ms"]
+        ? new Date(Number(req.headers["x-test-now-ms"]))
+        : new Date();
+
     const result = await db
       .update(tempBins)
       .set({
@@ -76,7 +90,7 @@ const getPaste = async (req, res) => {
         and(
           eq(tempBins.id, resourceId),
 
-          or(isNull(tempBins.expiresAt), gte(tempBins.expiresAt, new Date())),
+          or(isNull(tempBins.expiresAt), gte(tempBins.expiresAt, now)),
 
           or(isNull(tempBins.viewsRemaining), gt(tempBins.viewsRemaining, 0))
         )
@@ -85,17 +99,15 @@ const getPaste = async (req, res) => {
 
     const row = result[0];
 
- 
     if (!row) {
       return res.status(404).json({
         error: "Paste expired or not found",
       });
     }
 
- 
     if (
       (row.viewsRemaining !== null && row.viewsRemaining <= 0) ||
-      (row.expiresAt !== null && row.expiresAt < new Date())
+      (row.expiresAt !== null && row.expiresAt < now)
     ) {
       await db.delete(tempBins).where(eq(tempBins.id, resourceId));
     }
@@ -104,7 +116,6 @@ const getPaste = async (req, res) => {
       viewsRemaining: row.viewsRemaining,
       expiresAt: row.expiresAt,
     });
-
   } catch (error) {
     console.log("error : ", error);
     return res.status(500).json({ error: "Internal Server Error" });
