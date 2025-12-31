@@ -1,5 +1,5 @@
  
-const { and, or, isNull, gt, gte, eq, sql } = require("drizzle-orm");
+const { and, or, isNull, gt, gte, eq, sql, lte } = require("drizzle-orm");
 const { tempBins } = require("../models/binSchema");
 const { isNotNull } = require("drizzle-orm");
 const db = require("../config/db");
